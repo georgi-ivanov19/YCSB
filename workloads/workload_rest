@@ -29,7 +29,7 @@ exporter=site.ycsb.measurements.exporter.TextMeasurementsExporter
 threadcount=1
 fieldlengthdistribution=uniform
 measurementtype=hdrhistogram
-
+islocal=false
 #	Workload Properties
 fieldcount=1
 fieldlength=2500
@@ -42,7 +42,8 @@ operationcount=1000
 maxexecutiontime=720
 
 #	Custom Properties
-url.prefix=https://localhost:7193/api/
+url.prefix_local=https://localhost:7193/api/
+url.prefix=https://fitnesstrackmonolith.northeurope.cloudapp.azure.com/api/
 url.trace.read=readtrace.txt
 url.trace.insert=inserttrace.txt
 url.trace.update=updatetrace.txt
@@ -61,8 +62,8 @@ readzipfconstant=0.9
 insertzipfconstant=0.9
 updatezipfconstant=0.9
 deletezipfconstant=0.9
+users_local=e32a96e7-12a7-4f61-9f23-d4fc7116bc03,5da7d992-eb61-4d21-a650-056d11f2dfbb,81b771c2-7a05-4661-8232-d0aa7e6fd490,501e6856-e59a-40f2-836c-ff613182c77b,0c9c83c5-bca8-4326-ba5c-a6cfda5ff0f5,5ae3ad07-2478-448a-97ae-71c735e7d25a,dabf561a-7c09-4c0d-92e8-4bc33fbc5a7e,ab6391ea-8589-4299-91af-c4491b2ec4f4,a84a1d4a-10fe-46ba-a97d-5b51385c07e7,72c62dc7-6ae6-416f-9239-c0161f39608c,06c7fdb2-a38a-40ab-aa6e-ea2011b85b56
 users=e32a96e7-12a7-4f61-9f23-d4fc7116bc03,5da7d992-eb61-4d21-a650-056d11f2dfbb,81b771c2-7a05-4661-8232-d0aa7e6fd490,501e6856-e59a-40f2-836c-ff613182c77b,0c9c83c5-bca8-4326-ba5c-a6cfda5ff0f5,5ae3ad07-2478-448a-97ae-71c735e7d25a,dabf561a-7c09-4c0d-92e8-4bc33fbc5a7e,ab6391ea-8589-4299-91af-c4491b2ec4f4,a84a1d4a-10fe-46ba-a97d-5b51385c07e7,72c62dc7-6ae6-416f-9239-c0161f39608c,06c7fdb2-a38a-40ab-aa6e-ea2011b85b56
-
 #	Measurement Properties
 hdrhistogram.percentiles=50,90,95,99
 histogram.buckets=1
