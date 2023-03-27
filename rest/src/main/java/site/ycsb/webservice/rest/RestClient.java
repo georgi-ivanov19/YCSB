@@ -66,12 +66,14 @@ public class RestClient extends DB {
   private static final String EXEC_TIMEOUT = "timeout.exec";
   private static final String LOG_ENABLED = "log.enable";
   private static final String HEADERS = "headers";
+  private static final String USERS = "users";
   private static final String COMPRESSED_RESPONSE = "response.compression";
   private boolean compressedResponse;
   private boolean logEnabled;
   private String urlPrefix;
   private Properties props;
   private String[] headers;
+  private String[] users;
   private CloseableHttpClient client;
   private int conTimeout = 10000;
   private int readTimeout = 10000;
@@ -88,7 +90,11 @@ public class RestClient extends DB {
     logEnabled = Boolean.valueOf(props.getProperty(LOG_ENABLED, "false").trim());
     compressedResponse = Boolean.valueOf(props.getProperty(COMPRESSED_RESPONSE, "false").trim());
     headers = props.getProperty(HEADERS, "Accept */* Content-Type application/xml user-agent Mozilla/5.0 ").trim()
-          .split(" ");
+        .split(" ");
+    users = props.getProperty(USERS, "[]").trim().split(",");
+    // for (String u : users) {
+    // System.err.println("User: " + u);
+    // }
     setupClient();
   }
 
@@ -104,6 +110,16 @@ public class RestClient extends DB {
   @Override
   public Status read(String table, String endpoint, Set<String> fields, Map<String, ByteIterator> result) {
     int responseCode;
+    // Add a random userId to the endpoint if it is a request that requires it
+    if (endpoint.toLowerCase().startsWith("dashboard")) {
+      endpoint += "&userId=" + users[(int) (Math.random() * users.length)];
+    } else if ((endpoint.toLowerCase().startsWith("meals") && !endpoint.toLowerCase().startsWith("meals/"))
+        || (endpoint.toLowerCase().startsWith("workouts") && !endpoint.toLowerCase().startsWith("workouts/"))
+        || (endpoint.toLowerCase().startsWith("trackedworkouts")
+            && !endpoint.toLowerCase().startsWith("trackedworkouts/"))
+        || (endpoint.toLowerCase().startsWith("measurements") && !endpoint.toLowerCase().startsWith("measurements/"))) {
+      endpoint += "?userId=" + users[(int) (Math.random() * users.length)];
+    }
     try {
       responseCode = httpGet(urlPrefix + endpoint, result);
     } catch (Exception e) {
@@ -111,24 +127,60 @@ public class RestClient extends DB {
     }
     if (logEnabled) {
       System.err.println(new StringBuilder("GET Request: ").append(urlPrefix).append(endpoint)
-            .append(" | Response Code: ").append(responseCode).toString());
+          .append(" | Response Code: ").append(responseCode).toString());
     }
     return getStatus(responseCode);
   }
 
   @Override
   public Status insert(String table, String endpoint, Map<String, ByteIterator> values) {
+    String data = "";
+    switch (endpoint.toLowerCase()) {
+      case "exercises":
+        data = "{\"name\": \"YCSB Exercise\", \"workoutId\": 1," +
+            "\"defaultNumberOfSets\": 6, \"targetMuscle\": \"YCSBMuscle\"}";
+        break;
+      case "meals":
+        data = "{\"category\": \"Lunch\", \"totalCalories\": 1000," +
+            "\"protein\": 100, \"carbohydrates\": 100, \"fats\": 20, \"date\": \"2023-03-26T22:56:53.217Z\", \"applicationUserId\": \""
+            + users[(int) (Math.random() * users.length)] + "\"}";
+        break;
+      case "measurements":
+        data = "{\"type\": \"Waist\", \"value\": 90, \"unit\": \"cm\", \"date\": \"2023-03-26T22:56:53.217Z\", \"applicationUserId\": \""
+            + users[(int) (Math.random() * users.length)] + "\"}";
+        break;
+      case "workouts":
+        data = "{\"name\": \"YCSB Workout (INSERTED)\", \"dayOfWeek\": \"Saturday\", \"dateLastCompleted\": \"2023-03-26T22:56:53.217Z\", \"applicationUserId\": \""
+            + users[(int) (Math.random() * users.length)] + "\", \"exercises\": [], \"trackedWorkouts\": []}";
+        break;
+      case "trackedworkouts":
+        data = "{\"notes\": \"This tracked workout has been INSERTED by YCSB running tests\", \"startTime\": \"2023-03-26T20:56:53.217Z\", \"endTime\": \"2023-03-26T22:56:53.217Z\", \"totalVolume\": 1234, \"applicationUserId\": \""
+            + users[(int) (Math.random() * users.length)]
+            + "\", \"workoutId\": 1, \"exerciseSetsCompleted\": [], \"isCompleted\": false}";
+        break;
+      case "exercisesets/range":
+        data = "[{\"exerciseId\": 1, \"exerciseName\": \"YCSB Exercise (INSERTED)\", \"reps\": 20, \"weight\": 100, \"isWarmup\": true, \"trackedWorkoutId\": 1, \"isComplete\": false},"
+            +
+            "{\"exerciseId\": 1, \"exerciseName\": \"YCSB Exercise (INSERTED)\", \"reps\": 20, \"weight\": 100, \"isWarmup\": true, \"trackedWorkoutId\": 1, \"isComplete\": false}]";
+        break;
+      // ...
+      default:
+        throw new IllegalArgumentException("Unknown endpoint: " + endpoint);
+    }
+
     int responseCode;
     try {
-      responseCode = httpExecute(new HttpPost(urlPrefix + endpoint), values.get("data").toString());
+      responseCode = httpExecute(new HttpPost(urlPrefix + endpoint), data);
     } catch (Exception e) {
       responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.POST);
     }
     if (logEnabled) {
       System.err.println(new StringBuilder("POST Request: ").append(urlPrefix).append(endpoint)
-            .append(" | Response Code: ").append(responseCode).toString());
+          .append(" | Response Code: ").append(responseCode).toString());
     }
-    return getStatus(responseCode);
+    return
+
+    getStatus(responseCode);
   }
 
   @Override
@@ -141,7 +193,7 @@ public class RestClient extends DB {
     }
     if (logEnabled) {
       System.err.println(new StringBuilder("DELETE Request: ").append(urlPrefix).append(endpoint)
-            .append(" | Response Code: ").append(responseCode).toString());
+          .append(" | Response Code: ").append(responseCode).toString());
     }
     return getStatus(responseCode);
   }
@@ -149,14 +201,34 @@ public class RestClient extends DB {
   @Override
   public Status update(String table, String endpoint, Map<String, ByteIterator> values) {
     int responseCode;
+    // data will be based on the enpooint, id = random value of the ones you know
+    // are in the db
+    String data = "";
+    if (endpoint.toLowerCase().startsWith("exercises")) {
+      data = "{\"name\": \"YCSB Exercise (UPDATED)\", \"workoutId\": 1," +
+          "\"defaultNumberOfSets\": 6, \"targetMuscle\": \"YCSBMuscle (UPDATED)\"}";
+    } else if (endpoint.toLowerCase().startsWith("meals")) {
+      data = "{\"category\": \"Lunch\", \"totalCalories\": 1000," +
+          "\"protein\": 100, \"carbohydrates\": 100, \"fats\": 20, \"date\": \"2023-03-26T22:56:53.217Z\"}";
+    } else if (endpoint.toLowerCase().startsWith("measurements")) {
+      data = "{\"type\": \"Body fat\", \"value\": 22, \"unit\": \"%\", \"date\": \"2023-03-26T22:56:53.217Z\"}";
+    } else if (endpoint.toLowerCase().startsWith("workouts")) {
+      data = "{\"name\": \"YCSB Workout (UPDATED)\", \"dayOfWeek\": \"Sunday (UPDATED)\", \"dateLastCompleted\": \"2023-03-26T22:56:53.217Z\"}";
+    } else if (endpoint.toLowerCase().startsWith("trackedworkouts")) {
+      data = "{\"notes\": \"This tracked workout has been UPDATED by YCSB running tests\", \"startTime\": \"2023-03-26T20:56:53.217Z\", \"endTime\": \"2023-03-26T22:56:53.217Z\", \"totalVolume\": 1234, \"workoutId\": 1}";
+    }
+    // ...
+    else {
+      throw new IllegalArgumentException("Unknown endpoint: " + endpoint);
+    }
     try {
-      responseCode = httpExecute(new HttpPut(urlPrefix + endpoint), values.get("data").toString());
+      responseCode = httpExecute(new HttpPut(urlPrefix + endpoint), data);
     } catch (Exception e) {
       responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.PUT);
     }
     if (logEnabled) {
       System.err.println(new StringBuilder("PUT Request: ").append(urlPrefix).append(endpoint)
-            .append(" | Response Code: ").append(responseCode).toString());
+          .append(" | Response Code: ").append(responseCode).toString());
     }
     return getStatus(responseCode);
   }
@@ -192,7 +264,7 @@ public class RestClient extends DB {
           .append(e.getClass().getName()).append(" occured | Error message: ")
           .append(e.getMessage()).toString());
     }
-      
+
     if (e instanceof ClientProtocolException) {
       return 400;
     }
@@ -256,7 +328,7 @@ public class RestClient extends DB {
       request.setHeader(headers[i], headers[i + 1]);
     }
     InputStreamEntity reqEntity = new InputStreamEntity(new ByteArrayInputStream(data.getBytes()),
-          ContentType.APPLICATION_FORM_URLENCODED);
+        ContentType.APPLICATION_FORM_URLENCODED);
     reqEntity.setChunked(true);
     request.setEntity(reqEntity);
     CloseableHttpResponse response = client.execute(request);
@@ -266,7 +338,7 @@ public class RestClient extends DB {
     if (responseEntity != null) {
       InputStream stream = responseEntity.getContent();
       if (compressedResponse) {
-        stream = new GZIPInputStream(stream); 
+        stream = new GZIPInputStream(stream);
       }
       BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
       StringBuffer responseContent = new StringBuffer();
@@ -292,7 +364,7 @@ public class RestClient extends DB {
     client.close();
     return responseCode;
   }
-  
+
   private int httpDelete(String endpoint) throws IOException {
     requestTimedout.setIsSatisfied(false);
     Thread timer = new Thread(new Timer(execTimeout, requestTimedout));
@@ -310,7 +382,8 @@ public class RestClient extends DB {
   }
 
   /**
-   * Marks the input {@link Criteria} as satisfied when the input time has elapsed.
+   * Marks the input {@link Criteria} as satisfied when the input time has
+   * elapsed.
    */
   class Timer implements Runnable {
 
@@ -361,7 +434,7 @@ public class RestClient extends DB {
   class TimeoutException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
-    
+
     public TimeoutException() {
       super("HTTP Request exceeded execution time limit.");
     }
