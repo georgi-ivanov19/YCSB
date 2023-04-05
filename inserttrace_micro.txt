@@ -1,0 +1,6 @@
+workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Exercises
+workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/ExerciseSets/range
+workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/TrackedWorkouts
+workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Workouts
+measurements-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Measurements
+meals-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Meals

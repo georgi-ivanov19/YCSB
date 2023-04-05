@@ -28,6 +28,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.ws.rs.HttpMethod;
 
@@ -70,10 +71,12 @@ public class RestClient extends DB {
   private static final String USERS = "users";
   private static final String USERS_LOCAL = "users_local";
   private static final String IS_LOCAL = "islocal";
+  private static final String IS_MICROSERVICE = "ismicroservice";
   private static final String COMPRESSED_RESPONSE = "response.compression";
   private boolean compressedResponse;
   private boolean logEnabled;
   private boolean isLocal;
+  private boolean isMicroservice;
   private String urlPrefix;
   private Properties props;
   private String[] headers;
@@ -88,6 +91,7 @@ public class RestClient extends DB {
   public void init() throws DBException {
     props = getProperties();
     isLocal = Boolean.valueOf(props.getProperty(IS_LOCAL, "false").trim());
+    isMicroservice = Boolean.valueOf(props.getProperty(IS_MICROSERVICE, "false").trim());
     urlPrefix = isLocal ? props.getProperty(URL_PREFIX_LOCAL, "http://127.0.0.1:8080")
         : props.getProperty(URL_PREFIX, "");
     conTimeout = Integer.valueOf(props.getProperty(CON_TIMEOUT, "10")) * 1000;
@@ -117,15 +121,25 @@ public class RestClient extends DB {
   @Override
   public Status read(String table, String endpoint, Set<String> fields, Map<String, ByteIterator> result) {
     int responseCode;
-    // Add a random userId to the endpoint if it is a request that requires it
-    if (endpoint.toLowerCase().startsWith("dashboard")) {
-      endpoint += "&userId=" + users[(int) (Math.random() * users.length)];
-    } else if ((endpoint.toLowerCase().startsWith("meals") && !endpoint.toLowerCase().startsWith("meals/"))
-        || (endpoint.toLowerCase().startsWith("workouts") && !endpoint.toLowerCase().startsWith("workouts/"))
-        || (endpoint.toLowerCase().startsWith("trackedworkouts")
-            && !endpoint.toLowerCase().startsWith("trackedworkouts/"))
-        || (endpoint.toLowerCase().startsWith("measurements") && !endpoint.toLowerCase().startsWith("measurements/"))) {
-      endpoint += "?userId=" + users[(int) (Math.random() * users.length)];
+    if (isMicroservice) {
+      // Add a random userId to the endpoint if it is a request that requires it
+      if (endpoint.startsWith("dashboard")) {
+        endpoint += "&userId=" + users[ThreadLocalRandom.current().nextInt(0, users.length)];
+      } else if (endpoint.equals("meals-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Meals")
+          || endpoint.equals("workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Workouts")
+          || endpoint
+              .equals("measurements-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Measurements")) {
+        endpoint += "?userId=" + users[ThreadLocalRandom.current().nextInt(0, users.length)];
+      }
+    } else {
+      // Add a random userId to the endpoint if it is a request that requires it
+      if (endpoint.startsWith("Dashboard")) {
+        endpoint += "&userId=" + users[ThreadLocalRandom.current().nextInt(0, users.length)];
+      } else if (endpoint.equals("Meals")
+          || endpoint.equals("Workouts")
+          || endpoint.equals("Measurements")) {
+        endpoint += "?userId=" + users[ThreadLocalRandom.current().nextInt(0, users.length)];
+      }
     }
     try {
       responseCode = httpGet(urlPrefix + endpoint, result);
@@ -142,37 +156,54 @@ public class RestClient extends DB {
   @Override
   public Status insert(String table, String endpoint, Map<String, ByteIterator> values) {
     String data = "";
-    switch (endpoint.toLowerCase()) {
-      case "exercises":
-        data = "{\"name\": \"YCSB Exercise\", \"workoutId\": 1," +
-            "\"defaultNumberOfSets\": 6, \"targetMuscle\": \"YCSBMuscle\"}";
-        break;
-      case "meals":
-        data = "{\"category\": \"Lunch\", \"totalCalories\": 1000," +
-            "\"protein\": 100, \"carbohydrates\": 100, \"fats\": 20, \"date\": \"2023-03-26T22:56:53.217Z\", \"applicationUserId\": \""
-            + users[(int) (Math.random() * users.length)] + "\"}";
-        break;
-      case "measurements":
-        data = "{\"type\": \"Waist\", \"value\": 90, \"unit\": \"cm\", \"date\": \"2023-03-26T22:56:53.217Z\", \"applicationUserId\": \""
-            + users[(int) (Math.random() * users.length)] + "\"}";
-        break;
-      case "workouts":
-        data = "{\"name\": \"YCSB Workout (INSERTED)\", \"dayOfWeek\": \"Saturday\", \"dateLastCompleted\": \"2023-03-26T22:56:53.217Z\", \"applicationUserId\": \""
-            + users[(int) (Math.random() * users.length)] + "\", \"exercises\": [], \"trackedWorkouts\": []}";
-        break;
-      case "trackedworkouts":
-        data = "{\"notes\": \"This tracked workout has been INSERTED by YCSB running tests\", \"startTime\": \"2023-03-26T20:56:53.217Z\", \"endTime\": \"2023-03-26T22:56:53.217Z\", \"totalVolume\": 1234, \"applicationUserId\": \""
-            + users[(int) (Math.random() * users.length)]
-            + "\", \"workoutId\": 1, \"exerciseSetsCompleted\": [], \"isCompleted\": false}";
-        break;
-      case "exercisesets/range":
-        data = "[{\"exerciseId\": 1, \"exerciseName\": \"YCSB Exercise (INSERTED)\", \"reps\": 20, \"weight\": 100, \"isWarmup\": true, \"trackedWorkoutId\": 1, \"isComplete\": false},"
-            +
-            "{\"exerciseId\": 1, \"exerciseName\": \"YCSB Exercise (INSERTED)\", \"reps\": 20, \"weight\": 100, \"isWarmup\": true, \"trackedWorkoutId\": 1, \"isComplete\": false}]";
-        break;
-      // ...
-      default:
-        throw new IllegalArgumentException("Unknown endpoint: " + endpoint);
+    if (endpoint.equals("Exercises")
+        || endpoint.equals("workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Exercises")) {
+      int workoutId = ThreadLocalRandom.current().nextInt(1, 34);
+      data = "{\"name\": \"YCSB Exercise (INSERTED)\", \"workoutId\": " + workoutId
+          + "," +
+          "\"defaultNumberOfSets\": 6, \"targetMuscle\": \"YCSBMuscle (INSERTED)\"}";
+
+    } else if (endpoint.equals("Meals")
+        || endpoint.equals("meals-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Meals")) {
+
+      data = "{\"category\": \"Lunch\", \"totalCalories\": 1000," +
+          "\"protein\": 100, \"carbohydrates\": 100, \"fats\": 20, \"date\": \"2023-03-26T22:56:53.217Z\", \"applicationUserId\": \""
+          + users[ThreadLocalRandom.current().nextInt(0, users.length)] + "\"}";
+
+    } else if (endpoint.equals("Measurements") || endpoint
+        .equals("measurements-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Measurements")) {
+
+      data = "{\"type\": \"Waist\", \"value\": 90, \"unit\": \"cm\", \"date\": \"2023-03-26T22:56:53.217Z\", \"applicationUserId\": \""
+          + users[ThreadLocalRandom.current().nextInt(0, users.length)] + "\"}";
+
+    } else if (endpoint.equals("Workouts") || endpoint
+        .equals("workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Workouts")) {
+
+      data = "{\"name\": \"YCSB Workout (INSERTED)\", \"dayOfWeek\": \"Saturday\", \"dateLastCompleted\": \"2023-03-26T22:56:53.217Z\", \"applicationUserId\": \""
+          + users[ThreadLocalRandom.current().nextInt(0, users.length)]
+          + "\", \"exercises\": [], \"trackedWorkouts\": []}";
+
+    } else if (endpoint.equals("TrackedWorkouts") || endpoint
+        .equals("workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/TrackedWorkouts")) {
+      int workoutId = ThreadLocalRandom.current().nextInt(1, 34);
+      data = "{\"notes\": \"This tracked workout has been INSERTED by YCSB running tests\", \"startTime\": \"2023-03-26T20:56:53.217Z\", \"endTime\": \"2023-03-26T22:56:53.217Z\", \"totalVolume\": 1234, \"applicationUserId\": \""
+          + users[ThreadLocalRandom.current().nextInt(0, users.length)]
+          + "\", \"workoutId\": " + workoutId
+          + ", \"exerciseSetsCompleted\": [], \"isCompleted\": false}";
+
+    } else if (endpoint.equals("ExerciseSets/range") || endpoint
+        .equals("workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/ExerciseSets/range")) {
+      int trackedWorkoutId = ThreadLocalRandom.current().nextInt(1, 34);
+      int exerciseId = ThreadLocalRandom.current().nextInt(1, 100);
+      data = "[{\"exerciseId\": " + exerciseId
+          + ", \"exerciseName\": \"YCSB Exercise (INSERTED)\", \"reps\": 20, \"weight\": 100, \"isWarmup\": true, \"trackedWorkoutId\": "
+          + trackedWorkoutId + ", \"isComplete\": false},"
+          +
+          "{\"exerciseId\": " + exerciseId
+          + ", \"exerciseName\": \"YCSB Exercise (INSERTED)\", \"reps\": 20, \"weight\": 100, \"isWarmup\": true, \"trackedWorkoutId\": "
+          + trackedWorkoutId + ", \"isComplete\": false}]";
+    } else {
+      throw new IllegalArgumentException("Unknown endpoint: " + endpoint);
     }
 
     int responseCode;
@@ -208,24 +239,37 @@ public class RestClient extends DB {
   @Override
   public Status update(String table, String endpoint, Map<String, ByteIterator> values) {
     int responseCode;
-    // data will be based on the enpooint, id = random value of the ones you know
-    // are in the db
+
     String data = "";
-    if (endpoint.toLowerCase().startsWith("exercises")) {
-      data = "{\"name\": \"YCSB Exercise (UPDATED)\", \"workoutId\": 1," +
+    if (endpoint.startsWith("Exercises")
+        || endpoint.startsWith("workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Exercises")) {
+      int workoutId = ThreadLocalRandom.current().nextInt(1, 34);
+      data = "{\"name\": \"YCSB Exercise (UPDATED)\", \"workoutId\": " + workoutId
+          + "," +
           "\"defaultNumberOfSets\": 6, \"targetMuscle\": \"YCSBMuscle (UPDATED)\"}";
-    } else if (endpoint.toLowerCase().startsWith("meals")) {
+    } else if (endpoint.startsWith("Meals") || endpoint
+        .startsWith("meals-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Meals")) {
       data = "{\"category\": \"Lunch\", \"totalCalories\": 1000," +
           "\"protein\": 100, \"carbohydrates\": 100, \"fats\": 20, \"date\": \"2023-03-26T22:56:53.217Z\"}";
-    } else if (endpoint.toLowerCase().startsWith("measurements")) {
+    } else if (endpoint.startsWith("Measurements") || endpoint
+        .startsWith("measurements-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Measurements")) {
       data = "{\"type\": \"Body fat\", \"value\": 22, \"unit\": \"%\", \"date\": \"2023-03-26T22:56:53.217Z\"}";
-    } else if (endpoint.toLowerCase().startsWith("workouts")) {
+    } else if (endpoint.startsWith("Workouts") || endpoint
+        .startsWith("workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Workouts")) {
       data = "{\"name\": \"YCSB Workout (UPDATED)\", \"dayOfWeek\": \"Sunday (UPDATED)\", \"dateLastCompleted\": \"2023-03-26T22:56:53.217Z\"}";
-    } else if (endpoint.toLowerCase().startsWith("trackedworkouts")) {
-      data = "{\"notes\": \"This tracked workout has been UPDATED by YCSB running tests\", \"startTime\": \"2023-03-26T20:56:53.217Z\", \"endTime\": \"2023-03-26T22:56:53.217Z\", \"totalVolume\": 1234, \"workoutId\": 1}";
-    }
-    // ...
-    else {
+    } else if (endpoint.startsWith("TrackedWorkouts") || endpoint
+        .startsWith("workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/TrackedWorkouts")) {
+      int workoutId = ThreadLocalRandom.current().nextInt(1, 34);
+      data = "{\"notes\": \"This tracked workout has been UPDATED by YCSB running tests\", \"startTime\": \"2023-03-26T20:56:53.217Z\", \"endTime\": \"2023-03-26T22:56:53.217Z\", \"totalVolume\": 1234, \"workoutId\": "
+          + workoutId + "}";
+    } else if (endpoint.startsWith("ExerciseSets") || endpoint
+        .startsWith("workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/ExerciseSets")) {
+      int trackedWorkoutId = ThreadLocalRandom.current().nextInt(1, 34);
+      int exerciseId = ThreadLocalRandom.current().nextInt(1, 100);
+      data = "{\"exerciseId\": " + exerciseId
+          + ", \"exerciseName\": \"YCSB Exercise (UPDATED)\", \"reps\": 20, \"weight\": 100, \"isWarmup\": true, \"trackedWorkoutId\": "
+          + trackedWorkoutId + ", \"isComplete\": false}";
+    } else {
       throw new IllegalArgumentException("Unknown endpoint: " + endpoint);
     }
     try {

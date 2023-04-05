@@ -26,29 +26,27 @@
 workload=site.ycsb.workloads.RestWorkload
 db=site.ycsb.webservice.rest.RestClient
 exporter=site.ycsb.measurements.exporter.TextMeasurementsExporter
-threadcount=3
-
+threadcount=1
 fieldlengthdistribution=uniform
 measurementtype=hdrhistogram
-islocal=true
+islocal=false
 #	Workload Properties
 fieldcount=1
 fieldlength=2500
-readproportion=1
-updateproportion=0
+readproportion=0
+updateproportion=1
 deleteproportion=0
 insertproportion=0
 requestdistribution=zipfian
-operationcount=1000000
+operationcount=100
 maxexecutiontime=720
 
 #	Custom Properties
-url.prefix_local=https://localhost:7193/api/
-url.prefix=https://fitnesstrackmonolith.northeurope.cloudapp.azure.com/api/
-ismicroservice=false
-url.trace.read=readtrace.txt
-url.trace.insert=inserttrace.txt
-url.trace.update=updatetrace.txt
+url.prefix=https://
+ismicroservice=true
+url.trace.read=readtrace_micro.txt
+url.trace.insert=inserttrace_micro.txt
+url.trace.update=updatetrace_micro.txt
 url.trace.delete=deletetrace.txt
 # Header must be separated by space. Other delimiters might occur as header values and hence can not be used.
 headers=Accept */* Accept-Language en-US,en;q=0.5 Content-Type application/json user-agent Mozilla/5.0 Connection close
@@ -56,16 +54,15 @@ timeout.con=60
 timeout.read=60
 timeout.exec=60
 log.enable=true
-; readrecordcount=10000
-; insertrecordcount=5000
-; deleterecordcount=1000
-; updaterecordcount=1000
+#readrecordcount=10000
+#insertrecordcount=5000
+#deleterecordcount=1000
+#updaterecordcount=1000
 readzipfconstant=0.9
 insertzipfconstant=0.9
 updatezipfconstant=0.9
 deletezipfconstant=0.9
-users_local=e32a96e7-12a7-4f61-9f23-d4fc7116bc03,5da7d992-eb61-4d21-a650-056d11f2dfbb,81b771c2-7a05-4661-8232-d0aa7e6fd490,501e6856-e59a-40f2-836c-ff613182c77b,0c9c83c5-bca8-4326-ba5c-a6cfda5ff0f5,5ae3ad07-2478-448a-97ae-71c735e7d25a,dabf561a-7c09-4c0d-92e8-4bc33fbc5a7e,ab6391ea-8589-4299-91af-c4491b2ec4f4,a84a1d4a-10fe-46ba-a97d-5b51385c07e7,72c62dc7-6ae6-416f-9239-c0161f39608c,06c7fdb2-a38a-40ab-aa6e-ea2011b85b56
-users=e32a96e7-12a7-4f61-9f23-d4fc7116bc03,5da7d992-eb61-4d21-a650-056d11f2dfbb,81b771c2-7a05-4661-8232-d0aa7e6fd490,501e6856-e59a-40f2-836c-ff613182c77b,0c9c83c5-bca8-4326-ba5c-a6cfda5ff0f5,5ae3ad07-2478-448a-97ae-71c735e7d25a,dabf561a-7c09-4c0d-92e8-4bc33fbc5a7e,ab6391ea-8589-4299-91af-c4491b2ec4f4,a84a1d4a-10fe-46ba-a97d-5b51385c07e7,72c62dc7-6ae6-416f-9239-c0161f39608c,06c7fdb2-a38a-40ab-aa6e-ea2011b85b56
+users=620eebc4-69c6-48c1-b9bc-8ceb6855b607,9bb8263a-6dd1-42e9-8f29-a847dbb3e059,0371f684-9a41-4d40-ba2b-62cc5eabed46,b2f2a636-d75c-48cf-8e01-e6f86ba36d4b,aa88aabd-677b-4588-8cb0-213d5ba9e660,f0e37b93-0558-458c-9e61-d0330ed9f4ec,4d0bafc4-1d88-4433-9769-1e2d251530a7,5febdbbe-d537-430f-9ccb-b48f252d2d4e,c4824aab-c08f-4141-86c4-082fd8bbca8c,2abf2679-ae98-456c-99ed-fe7ca2698c2e,5f9c85a5-0150-4a44-b5a8-e2bf0e72a6b1
 #	Measurement Properties
 hdrhistogram.percentiles=50,90,95,99
 histogram.buckets=1
