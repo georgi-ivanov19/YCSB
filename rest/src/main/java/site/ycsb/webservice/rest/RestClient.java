@@ -70,12 +70,12 @@ public class RestClient extends DB {
   private static final String HEADERS = "headers";
   private static final String USERS = "users";
   private static final String USERS_LOCAL = "users_local";
-  private static final String IS_LOCAL = "islocal";
+  private static final String IS_APPSERVICE = "isappservice";
   private static final String IS_MICROSERVICE = "ismicroservice";
   private static final String COMPRESSED_RESPONSE = "response.compression";
   private boolean compressedResponse;
   private boolean logEnabled;
-  private boolean isLocal;
+  private boolean isAppService;
   private boolean isMicroservice;
   private String urlPrefix;
   private Properties props;
@@ -90,9 +90,9 @@ public class RestClient extends DB {
   @Override
   public void init() throws DBException {
     props = getProperties();
-    isLocal = Boolean.valueOf(props.getProperty(IS_LOCAL, "false").trim());
+    isAppService = Boolean.valueOf(props.getProperty(IS_APPSERVICE, "false").trim());
     isMicroservice = Boolean.valueOf(props.getProperty(IS_MICROSERVICE, "false").trim());
-    urlPrefix = isLocal ? props.getProperty(URL_PREFIX_LOCAL, "http://127.0.0.1:8080")
+    urlPrefix = isAppService ? props.getProperty(URL_PREFIX_LOCAL, "http://127.0.0.1:8080")
         : props.getProperty(URL_PREFIX, "");
     conTimeout = Integer.valueOf(props.getProperty(CON_TIMEOUT, "10")) * 1000;
     readTimeout = Integer.valueOf(props.getProperty(READ_TIMEOUT, "10")) * 1000;
@@ -101,8 +101,7 @@ public class RestClient extends DB {
     compressedResponse = Boolean.valueOf(props.getProperty(COMPRESSED_RESPONSE, "false").trim());
     headers = props.getProperty(HEADERS, "Accept */* Content-Type application/xml user-agent Mozilla/5.0 ").trim()
         .split(" ");
-    users = isLocal ? props.getProperty(USERS_LOCAL, "[]").trim().split(",")
-        : props.getProperty(USERS, "[]").trim().split(",");
+    users = props.getProperty(USERS, "[]").trim().split(",");
     // for (String u : users) {
     // System.err.println("User: " + u);
     // }

@@ -31,7 +31,7 @@ threadcount=1
 
 fieldlengthdistribution=uniform
 measurementtype=timeseries
-islocal=false
+isappservice=false
 #	Workload Properties
 readproportion=0
 updateproportion=1
@@ -41,7 +41,7 @@ operationcount=10000000
 maxexecutiontime=720000
 status.interval=30
 #	Custom Properties
-url.prefix_local=https://localhost:7193/api/
+url.prefix_local=https://fitnesstrack-monolith-appservice.azurewebsites.net/api/
 url.prefix=https://fitnesstrackmonolith.northeurope.cloudapp.azure.com/api/
 ismicroservice=false
 url.trace.read=readtrace.txt
@@ -53,6 +53,4 @@ timeout.con=60
 timeout.read=60
 timeout.exec=60
 log.enable=true
-
-users_local=e32a96e7-12a7-4f61-9f23-d4fc7116bc03,5da7d992-eb61-4d21-a650-056d11f2dfbb,81b771c2-7a05-4661-8232-d0aa7e6fd490,501e6856-e59a-40f2-836c-ff613182c77b,0c9c83c5-bca8-4326-ba5c-a6cfda5ff0f5,5ae3ad07-2478-448a-97ae-71c735e7d25a,dabf561a-7c09-4c0d-92e8-4bc33fbc5a7e,ab6391ea-8589-4299-91af-c4491b2ec4f4,a84a1d4a-10fe-46ba-a97d-5b51385c07e7,72c62dc7-6ae6-416f-9239-c0161f39608c,06c7fdb2-a38a-40ab-aa6e-ea2011b85b56
 users=55c13f07-9560-4d79-9d69-74cff601c661,581e0306-fb3a-4575-86ce-bb74a7fb4cc6,a448862d-09b9-4b8f-8abf-ec2150d2d4af,ea37cb55-e30c-43e4-84d4-ee021fc0fdcd,092fa670-ac49-443c-8528-d1951f066fb3,0ba9af8a-7312-4f5f-b8a8-e42c79e47aa4,9597dfa1-804a-4968-b281-719c3243077f,c070ccd4-4da4-41a6-a397-717561600c58,a90163d6-85e3-4832-863d-dbbd6ea63adc,54a5e75c-0985-4838-8480-82bb3e3491a9,d8ff2b45-20d5-44fe-a3c7-2993ad634e9a,045d960c-ea79-40a7-a2f6-a01452bf08d9,050e3e36-9826-4ce4-8b69-907bf6fcda31,ed727282-ca64-4817-909f-c37503c7f4b5,4df4411b-8d4c-473f-b82b-db2a84bbd722,97344c11-9dc9-42cd-b684-7469c85845d5,88598fa1-0cac-4664-a449-f7bc7daad546,22afa8d9-780b-4e86-b660-e39d1b091a0b,102a0450-960d-4de3-91cf-c1bb180d386d,e59c88ef-b697-44fb-a17c-6d57e13a503c
