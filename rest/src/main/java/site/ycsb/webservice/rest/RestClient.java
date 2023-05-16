@@ -159,20 +159,23 @@ public class RestClient extends DB {
         || endpoint.equals("workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Exercises")) {
       int workoutId = ThreadLocalRandom.current().nextInt(1, 34);
       data = "{\"name\": \"YCSB Exercise (INSERTED)\", \"workoutId\": " + workoutId
-          + "," +
-          "\"defaultNumberOfSets\": 6, \"targetMuscle\": \"YCSBMuscle (INSERTED)\"}";
+          + ", \"defaultNumberOfSets\": 6, \"targetMuscle\": \"YCSBMuscle (INSERTED)\"}";
 
     } else if (endpoint.equals("Meals")
         || endpoint.equals("meals-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Meals")) {
 
-      data = "{\"category\": \"Lunch\", \"totalCalories\": 1000," +
-          "\"protein\": 100, \"carbohydrates\": 100, \"fats\": 20, \"date\": \"2023-03-26T22:56:53.217Z\", \"applicationUserId\": \""
+      data = "{\"category\": \"Lunch\", \"totalCalories\": " + ThreadLocalRandom.current().nextInt(900, 1100)
+          + ", \"protein\": " + ThreadLocalRandom.current().nextInt(90, 100) + ", \"carbohydrates\": "
+          + ThreadLocalRandom.current().nextInt(90, 100) + ", \"fats\": "
+          + ThreadLocalRandom.current().nextInt(10, 20)
+          + ", \"date\": \"2023-03-26T22:56:53.217Z\", \"applicationUserId\": \""
           + users[ThreadLocalRandom.current().nextInt(0, users.length)] + "\"}";
 
     } else if (endpoint.equals("Measurements") || endpoint
         .equals("measurements-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/Measurements")) {
 
-      data = "{\"type\": \"Waist\", \"value\": 90, \"unit\": \"cm\", \"date\": \"2023-03-26T22:56:53.217Z\", \"applicationUserId\": \""
+      data = "{\"type\": \"Waist\", \"value\": " + ThreadLocalRandom.current().nextInt(70, 90)
+          + ", \"unit\": \"cm\", \"date\": \"2023-03-26T22:56:53.217Z\", \"applicationUserId\": \""
           + users[ThreadLocalRandom.current().nextInt(0, users.length)] + "\"}";
 
     } else if (endpoint.equals("Workouts") || endpoint
@@ -185,7 +188,8 @@ public class RestClient extends DB {
     } else if (endpoint.equals("TrackedWorkouts") || endpoint
         .equals("workouts-api.salmonisland-f0d5c65e.northeurope.azurecontainerapps.io/api/TrackedWorkouts")) {
       int workoutId = ThreadLocalRandom.current().nextInt(1, 34);
-      data = "{\"notes\": \"This tracked workout has been INSERTED by YCSB running tests\", \"startTime\": \"2023-03-26T20:56:53.217Z\", \"endTime\": \"2023-03-26T22:56:53.217Z\", \"totalVolume\": 1234, \"applicationUserId\": \""
+      data = "{\"notes\": \"This tracked workout has been INSERTED by YCSB running tests\", \"startTime\": \"2023-03-26T20:56:53.217Z\", \"endTime\": \"2023-03-26T22:56:53.217Z\", \"totalVolume\": "
+          + ThreadLocalRandom.current().nextInt(900, 1100) + ", \"applicationUserId\": \""
           + users[ThreadLocalRandom.current().nextInt(0, users.length)]
           + "\", \"workoutId\": " + workoutId
           + ", \"exerciseSetsCompleted\": [], \"isCompleted\": false}";
@@ -195,11 +199,15 @@ public class RestClient extends DB {
       int trackedWorkoutId = ThreadLocalRandom.current().nextInt(1, 34);
       int exerciseId = ThreadLocalRandom.current().nextInt(1, 100);
       data = "[{\"exerciseId\": " + exerciseId
-          + ", \"exerciseName\": \"YCSB Exercise (INSERTED)\", \"reps\": 20, \"weight\": 100, \"isWarmup\": true, \"trackedWorkoutId\": "
+          + ", \"exerciseName\": \"YCSB Exercise (INSERTED)\", \"reps\": " + ThreadLocalRandom.current().nextInt(5, 15)
+          + ", \"weight\": " + ThreadLocalRandom.current().nextInt(80, 100)
+          + ", \"isWarmup\": true, \"trackedWorkoutId\": "
           + trackedWorkoutId + ", \"isComplete\": false},"
           +
           "{\"exerciseId\": " + exerciseId
-          + ", \"exerciseName\": \"YCSB Exercise (INSERTED)\", \"reps\": 20, \"weight\": 100, \"isWarmup\": true, \"trackedWorkoutId\": "
+          + ", \"exerciseName\": \"YCSB Exercise (INSERTED)\", \"reps\": " + ThreadLocalRandom.current().nextInt(5, 15)
+          + ", \"weight\": "
+          + ThreadLocalRandom.current().nextInt(50, 100) + ", \"isWarmup\": true, \"trackedWorkoutId\": "
           + trackedWorkoutId + ", \"isComplete\": false}]";
     } else {
       throw new IllegalArgumentException("Unknown endpoint: " + endpoint);
